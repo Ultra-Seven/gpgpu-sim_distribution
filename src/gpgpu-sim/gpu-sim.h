@@ -361,7 +361,10 @@ private:
 
     friend class gpgpu_sim;
 };
-
+/*
+ * gpgu_sim is a class that define all important interfaces that GPGPU-SIM provides
+ * including: configuration, statistics collection, simulation control
+*/
 class gpgpu_sim : public gpgpu_t {
 public:
    gpgpu_sim( const gpgpu_sim_config &config );

@@ -196,15 +196,17 @@ void register_ptx_function( const char *name, function_info *impl )
 #  endif
 # endif
 #endif
-
+//various device IDs in a linked list
 struct _cuda_device_id {
 	_cuda_device_id(gpgpu_sim* gpu) {m_id = 0; m_next = NULL; m_gpgpu=gpu;}
+	//next pointer
 	struct _cuda_device_id *next() { return m_next; }
 	unsigned num_shader() const { return m_gpgpu->get_config().num_shader(); }
 	int num_devices() const {
 		if( m_next == NULL ) return 1;
 		else return 1 + m_next->num_devices();
 	}
+	//retrieve a particular device
 	struct _cuda_device_id *get_device( unsigned n )
 	{
 		assert( n < (unsigned)num_devices() );
@@ -222,6 +224,7 @@ struct _cuda_device_id {
 	gpgpu_sim *get_gpgpu() { return m_gpgpu; }
 private:
 	unsigned m_id;
+	//most important. gpgu_sim is a class that define all important interfaces that GPGPU-SIM provides
 	class gpgpu_sim *m_gpgpu;
 	struct _cuda_device_id *m_next;
 };
