@@ -53,6 +53,12 @@ pthread_t g_simulation_thread;
 
 gpgpu_sim_config g_the_gpu_config;
 gpgpu_sim *g_the_gpu;
+//This stream_manager object is declared (extern stream_manager *g_stream_manager;) and used by cudaLaunch(), cudaMemcpy()
+/*
+ * cuda runtime API is invoked, the simulator captures the corresponding event and read some information
+ * (e.g., kernel information) and push the information onto the g_stream_manager,
+ * which can be queried, processed or simulated by the concurrent simulation thread gpgpu_sim_thread_concurrent()
+ */
 stream_manager *g_stream_manager;
 
 
@@ -112,6 +118,7 @@ void *gpgpu_sim_thread_concurrent(void*)
         pthread_mutex_unlock(&g_sim_lock);
         bool active = false;
         bool sim_cycles = false;
+        //g_the_gpu: initialized to point to the newly created gpgpu_sim object
         g_the_gpu->init();
         do {
             // check if a kernel has completed
@@ -202,7 +209,7 @@ gpgpu_sim *gpgpu_ptx_sim_init_perf()
    // so it does the parsing correctly independent of the system environment variables
    assert(setlocale(LC_NUMERIC,"C"));
    g_the_gpu_config.init();
-
+   //initialize a object of gpgpu-sim
    g_the_gpu = new gpgpu_sim(g_the_gpu_config);
    g_stream_manager = new stream_manager(g_the_gpu,g_cuda_launch_blocking);
 

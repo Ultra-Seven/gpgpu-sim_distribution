@@ -306,8 +306,9 @@ class _cuda_device_id *GPGPUSim_Init()
 {
 	static _cuda_device_id *the_device = NULL;
 	if( !the_device ) {
+		//gpgpu-sim object
 		gpgpu_sim *the_gpu = gpgpu_ptx_sim_init_perf();
-
+		//device property
 		cudaDeviceProp *prop = (cudaDeviceProp *) calloc(sizeof(cudaDeviceProp),1);
 		snprintf(prop->name,256,"GPGPU-Sim_v%s", g_gpgpusim_version_string );
 		prop->major = 2;
@@ -331,6 +332,8 @@ class _cuda_device_id *GPGPUSim_Init()
 		prop->multiProcessorCount = the_gpu->get_config().num_shader();
 #endif
 		the_gpu->set_prop(prop);
+
+		//creates and return a new _cuda_device_id based on the created gpgpu_sim object
 		the_device = new _cuda_device_id(the_gpu);
 	}
 	start_sim_thread(1);
@@ -1593,6 +1596,7 @@ void** CUDARTAPI __cudaRegisterFatBinary( void *fatCubin )
 	printf("GPGPU-Sim PTX: ERROR ** this version of GPGPU-Sim requires CUDA 2.1 or higher\n");
 	exit(1);
 #endif
+    //creating the context, initialization and forking the simulation thread
 	CUctx_st *context = GPGPUSim_Context();
 	static unsigned next_fat_bin_handle = 1;
 	if(context->get_device()->get_gpgpu()->get_config().use_cuobjdump()) {
