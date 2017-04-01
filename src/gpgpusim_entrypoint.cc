@@ -135,6 +135,8 @@ void *gpgpu_sim_thread_concurrent(void*)
                 break;
 
             if( g_the_gpu->active() ) {
+                //will be executed for performance simulation after g_stream_manager->operation(&sim_cycles);
+                //in which gpu->launch( m_kernel ) is executed when performance simulated mode is selected
                 g_the_gpu->cycle();
                 sim_cycles = true;
                 g_the_gpu->deadlock_check();

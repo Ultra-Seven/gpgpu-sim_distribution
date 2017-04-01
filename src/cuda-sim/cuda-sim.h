@@ -80,7 +80,10 @@ void set_param_gpgpu_num_shaders(int num_shaders);
 
 
 /*!
- * This class functionally executes a kernel. It uses the basic data structures and procedures in core_t 
+ * This class functionally executes a kernel. It uses the basic data structures and procedures in core_t
+ * functionalCoreSim class is inherited from the core_t abstract class,
+ * which contains many of the functional simulation data structures and procedures
+ * that are used by the pure functional simulation as well as performance simulation.
  */
 class functionalCoreSim: public core_t
 {    

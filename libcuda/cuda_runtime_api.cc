@@ -228,7 +228,7 @@ private:
 	class gpgpu_sim *m_gpgpu;
 	struct _cuda_device_id *m_next;
 };
-
+//cuda context
 struct CUctx_st {
 	CUctx_st( _cuda_device_id *gpu ) { m_gpu = gpu; }
 
@@ -248,7 +248,7 @@ struct CUctx_st {
 		assert( f != NULL );
 		f->set_kernel_info(info);
 	}
-
+	//GPGPU-sim searches for symbol table associated with that fatCubin in which device function is located.
 	void register_function( unsigned fat_cubin_handle, const char *hostFun, const char *deviceFun )
 	{
 		if( m_code.find(fat_cubin_handle) != m_code.end() ) {
@@ -275,7 +275,7 @@ private:
 	unsigned m_last_fat_cubin_handle;
 	std::map<const void*,function_info*> m_kernel_lookup; // unique id (CUDA app function address) => kernel entry point
 };
-
+//the configuration of kernel
 class kernel_config {
 public:
 	kernel_config( dim3 GridDim, dim3 BlockDim, size_t sharedMem, struct CUstream_st *stream )
@@ -921,6 +921,11 @@ __host__ cudaError_t CUDARTAPI cudaLaunch( const char *hostFun )
 	struct CUstream_st *stream = config.get_stream();
 	printf("\nGPGPU-Sim PTX: cudaLaunch for 0x%p (mode=%s) on stream %u\n", hostFun,
 			g_ptx_sim_mode?"functional simulation":"performance simulation", stream?stream->get_uid():0 );
+	/*
+	 * The kernel_info_t object contains the GPU grid and block dimensions,
+	 * the function_info object associated with the kernel entry point,
+	 * and memory allocated for the kernel arguments in parammemory.
+	 */
 	kernel_info_t *grid = gpgpu_cuda_ptx_sim_init_grid(hostFun,config.get_args(),config.grid_dim(),config.block_dim(),context);
 	std::string kname = grid->name();
 	dim3 gridDim = config.grid_dim();
@@ -1188,7 +1193,7 @@ private:
 	std::string elffilename;
 	std::string sassfilename;
 };
-
+//PTX file
 class cuobjdumpPTXSection : public cuobjdumpSection
 {
 public:
@@ -1207,7 +1212,7 @@ public:
 private:
 	std::string ptxfilename;
 };
-
+//global variables:
 std::list<cuobjdumpSection*> cuobjdumpSectionList;
 std::list<cuobjdumpSection*> libSectionList;
 
@@ -1301,7 +1306,7 @@ void extract_code_using_cuobjdump(){
 	CUctx_st *context = GPGPUSim_Context();
 	char command[1000];
 
-   std::string app_binary = get_app_binary(); 
+    std::string app_binary = get_app_binary();
 
 	char fname[1024];
 	snprintf(fname,1024,"_cuobjdump_complete_output_XXXXXX");
@@ -1370,6 +1375,7 @@ void extract_code_using_cuobjdump(){
 		int cnt=1;
 		while(libsf.good()){
 			std::stringstream libcodfn;
+			//save the result of cuobjdump in there
 			libcodfn << "_cuobjdump_complete_lib_" << cnt << "_";
 			cmd.str(""); //resetting
 			cmd << "$CUDA_INSTALL_PATH/bin/cuobjdump -ptx -elf -sass ";
@@ -1384,6 +1390,7 @@ void extract_code_using_cuobjdump(){
 
 			std::cout << "Trying to parse " << libcodfn << std::endl;
 			cuobjdump_in = fopen(libcodfn.str().c_str(), "r");
+            //XXX
 			cuobjdump_parse();
 			fclose(cuobjdump_in);
 			std::getline(libsf, line);
@@ -1534,8 +1541,14 @@ cuobjdumpPTXSection* findPTXSection(const std::string identifier){
 
 //! Extract the code using cuobjdump and remove unnecessary sections
 void cuobjdumpInit(){
+	//init a GPGPUSim context
 	CUctx_st *context = GPGPUSim_Context();
 	extract_code_using_cuobjdump(); //extract all the output of cuobjdump to _cuobjdump_*.*
+	/*
+	 * After extract_code_using_cuobjdump(); is executed in cuobjdumpInit()
+	 * the statement cuobjdumpSectionList = pruneSectionList(cuobjdumpSectionList, context);
+	 * removes the unnecessary sections
+	 */
 	cuobjdumpSectionList = pruneSectionList(cuobjdumpSectionList, context);
 }
 
@@ -1556,8 +1569,9 @@ void cuobjdumpParseBinary(unsigned int handle){
 
 	std::string fname = fatbinmap[handle];
 	cuobjdumpPTXSection* ptx = findPTXSection(fname);
-
+	//symbol table
 	symbol_table *symtab;
+	//ptx file name
 	char *ptxcode;
 	const char *override_ptx_name = getenv("PTX_SIM_KERNELFILE"); 
    if (override_ptx_name == NULL or getenv("PTX_SIM_USE_PTX_FILE") == NULL) {
@@ -1631,6 +1645,7 @@ void** CUDARTAPI __cudaRegisterFatBinary( void *fatCubin )
 		 */
 		assert(fat_cubin_handle >= 1);
 		if (fat_cubin_handle==1) cuobjdumpInit();
+		//! Keep track of the association between filename and cubin handle
 		cuobjdumpRegisterFatBinary(fat_cubin_handle, filename);
 
 		return (void**)fat_cubin_handle;
@@ -1707,7 +1722,7 @@ cudaError_t CUDARTAPI cudaDeviceSynchronize(void){
 	return g_last_cudaError = cudaSuccess;
 }
 
-
+//generate a mapping between device and host functions
 void CUDARTAPI __cudaRegisterFunction(
 		void   **fatCubinHandle,
 		const char    *hostFun,
@@ -2115,13 +2130,14 @@ static int load_constants( symbol_table *symtab, addr_t min_gaddr, gpgpu_t *gpu 
 	fflush(stdout);
 	return nc_bytes;
 }
-
+//create an object of kernel_info_t
 kernel_info_t *gpgpu_cuda_ptx_sim_init_grid( const char *hostFun, 
 		gpgpu_ptx_sim_arg_list_t args,
 		struct dim3 gridDim,
 		struct dim3 blockDim,
 		CUctx_st* context )
 {
+	//returns entry function for the kernel
 	function_info *entry = context->get_kernel(hostFun);
 	kernel_info_t *result = new kernel_info_t(gridDim,blockDim,entry);
 	if( entry == NULL ) {

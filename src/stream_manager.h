@@ -53,7 +53,7 @@ enum stream_operation_type {
     stream_kernel_launch,
     stream_event
 };
-
+//stream_operation essentially keeps track of different types of cuda operations such as kernel launch, memory copy
 class stream_operation {
 public:
     stream_operation()
@@ -208,12 +208,16 @@ private:
 
    static int m_next_event_uid;
 };
-
+//The CUstream_st  is a struct that contains a list of stream_operation objects
+// and a few methods to manipulate the stream_operation objects in the list
 struct CUstream_st {
 public:
-    CUstream_st(); 
+    CUstream_st();
+    //check if the operation list is empty
     bool empty();
+    //check if the there is an operating is in process
     bool busy();
+    //wait in a loop until all the operations are done in the list, i.e., the list is empty
     void synchronize();
     void push( const stream_operation &op );
     void record_next_done();

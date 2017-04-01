@@ -256,7 +256,15 @@ private:
       unsigned m_sm_version;
       unsigned m_ptx_extensions;
 };
-
+/*
+ * Contains functional simulation state for a single scalar thread (work item in OpenCL). This includes the following:
+Register value storage
+Local memory storage (private memory in OpenCL)
+Shared memory storage (local memory in OpenCL). Notice that all scalar threads from the same thread block/workgroup accesses the same shared memory storage.
+Program counter (PC)
+Call stack
+Thread IDs (the software ID within a grid launch, and the hardware ID indicating which hardware thread slot it occupies in timing model)
+ */
 class ptx_thread_info {
 public:
    ~ptx_thread_info();
@@ -463,7 +471,7 @@ private:
 
    std::list<stack_entry> m_callstack;
    unsigned m_local_mem_stack_pointer;
-
+    // map symbol to register
    typedef tr1_hash_map<const symbol*,ptx_reg_t> reg_map_t;
    std::list<reg_map_t> m_regs;
    std::list<reg_map_t> m_debug_trace_regs_modified;

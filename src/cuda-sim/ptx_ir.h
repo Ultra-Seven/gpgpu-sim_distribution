@@ -42,7 +42,7 @@
 #include "ptx_sim.h"
 
 #include "memory.h"
-
+//the information of a type symbol
 class type_info_key {
 public:
    type_info_key()
@@ -96,11 +96,14 @@ public:
    memory_space_t get_memory_space() const { return m_space_spec; }
 private:
    bool m_init;
-   memory_space_t m_space_spec; 
+    //global? local? shared?
+   memory_space_t m_space_spec;
+    //unsigned? int? float? double?
    int m_scalar_type_spec;
    int m_vector_spec;
    int m_alignment_spec;
    int m_extern_spec;
+    //array dimension
    int m_array_dim;
    int m_is_function;
    bool m_is_non_arch_reg;
@@ -1073,7 +1076,7 @@ private:
    friend class function_info;
    static unsigned g_num_ptx_inst_uid;
 };
-
+// the information of parameters
 class param_info {
 public:
    param_info() { m_valid = false; m_value_set=false; m_size = 0; m_is_ptr = false; }
@@ -1272,6 +1275,7 @@ private:
    unsigned m_start_PC;
    unsigned m_instr_mem_size;
    std::map<std::string,param_t> m_kernel_params;
+    // stores each of the kernel arguments in a map
    std::map<unsigned,param_info> m_ptx_kernel_param_info;
    const symbol *m_return_var_sym;
    std::vector<const symbol*> m_args;
@@ -1289,7 +1293,7 @@ private:
    static std::vector<ptx_instruction*> s_g_pc_to_insn; // a direct mapping from PC to instruction
    static unsigned sm_next_uid;
 };
-
+//the buffer of arguments
 class arg_buffer_t {
 public:
    arg_buffer_t()

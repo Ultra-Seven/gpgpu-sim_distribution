@@ -247,8 +247,9 @@ private:
    dim3 m_next_tid;
 
    unsigned m_num_cores_running;
-
+    //Obviously it’s a list of ptx_thread_info *.
    std::list<class ptx_thread_info *> m_active_threads;
+   //Abstract base class for implementing memory storage for functional simulation state
    class memory_space *m_param_mem;
 };
 

@@ -195,7 +195,7 @@ void add_directive()
 
 #define mymax(a,b) ((a)>(b)?(a):(b))
 
-void end_function() 
+void _endfunction()
 {
    PTX_PARSE_DPRINTF("end_function");
 

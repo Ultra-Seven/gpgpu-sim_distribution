@@ -154,8 +154,10 @@ void stream_operation::do_operation( gpgpu_sim *gpu )
         if( gpu->can_start_kernel() ) {
         	gpu->set_cache_config(m_kernel->name());
         	printf("kernel \'%s\' transfer to GPU hardware scheduler\n", m_kernel->name().c_str() );
+            //performance simulation mode
             if( m_sim_mode )
                 gpgpu_cuda_ptx_sim_main_func( *m_kernel );
+            //purely functional simulation mode
             else
                 gpu->launch( m_kernel );
         }
@@ -199,13 +201,15 @@ stream_manager::stream_manager( gpgpu_sim *gpu, bool cuda_launch_blocking )
 
 bool stream_manager::operation( bool * sim)
 {
+    //if there is a finished kernel and print its statistics if any
     pthread_mutex_lock(&m_lock);
     bool check=check_finished_kernel();
     if(check)m_gpu->print_stats();
+    //Next the first stream operation op is popped out from the list using (stream_operation op =front();)
+    // and then the statement op.do_operation( m_gpu ); is executed
     stream_operation op =front();
     op.do_operation( m_gpu );
     pthread_mutex_unlock(&m_lock);
-    //pthread_mutex_lock(&m_lock);
     // simulate a clock cycle on the GPU
     return check;
 }

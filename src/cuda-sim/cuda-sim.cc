@@ -179,7 +179,13 @@ std::map<unsigned,function_info*> g_pc_to_finfo;
 std::vector<ptx_instruction*> function_info::s_g_pc_to_insn;
 
 #define MAX_INST_SIZE 8 /*bytes*/
-
+/*
+ * which does a lot of things including putting instructions into m_instr_mem[],
+ * creating the pc-instruction map s_g_pc_to_insn ,
+ * analyzing the basic block information, branch/divergence information by searching the post-dominators,
+ * computing target pc for branch instructions, etc.
+ * All these analyzed information are stored in appropriate members in the function_info structure
+ */
 void function_info::ptx_assemble()
 {
    if( m_assembled ) {
